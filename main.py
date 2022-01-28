@@ -5,6 +5,8 @@ import datetime
 import telegram
 import requests
 from dotenv import load_dotenv
+import pathlib
+from pathlib import Path
 
 
 def main():
@@ -12,14 +14,15 @@ def main():
     Path("images").mkdir(parents=True, exist_ok=True)
     nasa_api_key = os.getenv("NASA_API_KEY")
     telegram_api_key = os.getenv("TELEGRAM_API_KEY")
+    dir_path = pathlib.Path.cwd()
     
     #fetch_spacex_last_launch()
     #fetch_nasa_photos(nasa_api_key)
     #fetch_nasa_epic_photos(nasa_api_key)
 
     bot = telegram.Bot(telegram_api_key)
-    bot.send_message(chat_id='-1001733936497', text="I'm sorry Dave I'm afraid I can't do that.")
-  
+    path = Path(dir_path, 'images', 'nasa1.jpg')
+    bot.send_photo(chat_id='-1001733936497', photo=open(path, 'rb'))
 
 def fetch_nasa_epic_photos(nasa_api_key):
     params = {'api_key': nasa_api_key}
@@ -27,12 +30,12 @@ def fetch_nasa_epic_photos(nasa_api_key):
     response = requests.get(url, params=params)
     response.raise_for_status()
     nasa_photos = response.json()
-    for photo in nasa_photos:
+    for number, photo in enumerate(nasa_photos):
         photo_date = datetime.datetime.fromisoformat(photo['date'])
         photo_name = photo['image']
         formatted_date = photo_date.strftime("%Y/%m/%d")
         url = f'https://api.nasa.gov/EPIC/archive/natural/{formatted_date}/png/{photo_name}.png'
-        download_image(url, photo_name, params)
+        download_image(url, f'nasaepic{number}.png', params)
 
 
 def fetch_nasa_photos(nasa_api_key):
@@ -54,7 +57,6 @@ def fetch_spacex_last_launch():
     images = response.json()[35]['links']['flickr_images']
     for number, image in enumerate(images):
         download_image(image, f'spacex{number}.jpg')
-        print(number)
 
 
 def get_img_extension(url):
