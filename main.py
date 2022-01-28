@@ -1,28 +1,37 @@
+import datetime
 import os
+import time
 import urllib
 from pathlib import Path
-import datetime
-import telegram
+
 import requests
+import telegram
 from dotenv import load_dotenv
-import pathlib
-from pathlib import Path
 
 
 def main():
     load_dotenv()
     Path("images").mkdir(parents=True, exist_ok=True)
-    nasa_api_key = os.getenv("NASA_API_KEY")
+    default_delay = 60 * 60 * 24
+    nasa_api_key = os.getenv("NASA_API_KEY", default_delay)
     telegram_api_key = os.getenv("TELEGRAM_API_KEY")
-    dir_path = pathlib.Path.cwd()
-    
-    #fetch_spacex_last_launch()
-    #fetch_nasa_photos(nasa_api_key)
-    #fetch_nasa_epic_photos(nasa_api_key)
+    posting_delay = os.getenv("POSTING_DELAY")
+    dir_path = Path.cwd()
+
+    fetch_spacex_last_launch()
+    fetch_nasa_photos(nasa_api_key)
+    fetch_nasa_epic_photos(nasa_api_key)
 
     bot = telegram.Bot(telegram_api_key)
-    path = Path(dir_path, 'images', 'nasa1.jpg')
-    bot.send_photo(chat_id='-1001733936497', photo=open(path, 'rb'))
+
+    photos = os.listdir(Path(dir_path, 'images'))
+
+    while True:
+        for photo in photos:
+            path = Path(dir_path, 'images', photo)
+            bot.send_photo(chat_id='-1001733936497', photo=open(path, 'rb'))
+            time.sleep(int(posting_delay))
+
 
 def fetch_nasa_epic_photos(nasa_api_key):
     params = {'api_key': nasa_api_key}
